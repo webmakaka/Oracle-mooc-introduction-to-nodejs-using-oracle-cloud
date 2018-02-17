@@ -1,0 +1,5 @@
+Run this to add oracledb dependency (JUST ONCE)
+npm install oracledb
+
+run this before running db version (ONCE PER TERMINAL WINDOW IN DEV VM)
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib

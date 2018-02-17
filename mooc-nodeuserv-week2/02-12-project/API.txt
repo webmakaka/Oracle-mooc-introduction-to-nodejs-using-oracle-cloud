@@ -1,0 +1,94 @@
+JSON Objects:
+
+<OUT_MOVIE>
+    id          : number
+    name        : string
+    year        : number
+    studio      : string
+    genre       : string
+    rating      : string
+    runtime     : number
+    director    : string
+    description : string
+    reviews     : array<OUT-REVIEW>
+
+<IN_MOVIE>
+    name        : string
+    year        : number
+    studio      : string
+    genre       : string
+    rating      : string
+    runtime     : number
+    director    : string
+    description : string
+
+<OUT_REVIEW>
+    id          : number
+    name        : string
+    date        : string
+    score       : number
+    description : string
+
+<IN_REVIEW>
+    name        : string
+    date        : string
+    score       : number
+    description : string
+
+<OUT_SUMMARY>
+    id          : number
+    name        : string
+    year        : number
+    studio      : string
+    genre       : string
+    rating      : string
+    runtime     : number
+    director    : string
+    description : string
+    reviews     : number
+    score       : number
+
+GET /
+    returns a list of movie summaries
+    REQUEST: empty
+    RESPONSE: Array<OUT_SUMMARY>
+
+GET /movieId
+    returns a movie with its reviews
+    REQUEST: empty
+    RESPONSE: OUT_MOVIE
+
+GET /movieId/reviewId
+    returns a review of a movie
+    REQUEST: empty
+    RESPONSE: OUT_REVIEW
+
+POST /
+    add a movie
+    REQUEST: IN_MOVIE
+    RESPONSE: the id of the movie added.
+
+POST /movieId
+    add a review to the movie
+    REQUEST: IN_REVIEW
+    RESPONSE: the id of the review added.
+
+PUT /movieId
+    Update a movie
+    REQUEST: IN_MOVIE
+    RESPONSE: empty
+
+PUT /movieId/reviewId
+    Update a review
+    REQUEST: IN_REVIEW
+    RESPONSE: empty
+
+DELETE /movieId
+    Deletes a movie and all its reviews
+    REQUEST: empty
+    RESPONSE: empty
+
+DELETE /movieId/reviewId
+    Deletes a movie a review from the movie
+    REQUEST: empty
+    RESPONSE: empty
