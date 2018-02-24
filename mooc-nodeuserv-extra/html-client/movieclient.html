@@ -1,0 +1,463 @@
+<!doctype html>
+<!-- Copyright © 2017 Oracle and/or its affiliates. All rights reserved. -->
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
+    <script type="text/javascript">
+        var server = "http://localhost:8888";
+        $(function () {
+            $("#login").dialog({
+                autoOpen: true,
+                modal: true,
+                width: 'auto'
+            });
+
+            $("#addMovieDiv").dialog({
+                autoOpen: false,
+                modal: true,
+                width: 'auto'
+            });
+            $("#addMovieCancel").button().on("click", function () {
+                $("#addMovieDiv").dialog('close');
+            });
+
+            $("#updateMovieDiv").dialog({
+                autoOpen: false,
+                modal: true,
+                width: 'auto'
+            });
+            $("#updateMovieCancel").button().on("click", function () {
+                $("#updateMovieDiv").dialog('close');
+            });
+
+            $('#addReviewDiv').dialog({
+                autoOpen: false,
+                modal: true,
+                width: 'auto'
+            });
+            $("#addReviewCancel").button().on("click", function () {
+                $("#addReviewDiv").dialog('close');
+            });
+
+            $('#updateReviewDiv').dialog({
+                autoOpen: false,
+                modal: true,
+                width: 'auto'
+            });
+            $("#updateReviewCancel").button().on("click", function () {
+                $("#updateReviewDiv").dialog('close');
+            });
+
+            $("#loginbtn").button().on("click", function () {
+                server = $("#inserver").val();
+                loadMovies();
+                $("#login").dialog("close");
+            });
+
+            $('#content').addClass("ui-widget");
+
+        });
+        function loadMovies() {
+            $("#content").html("LOADING...");
+            $.ajax({
+                type: "GET",
+                url: server
+            }).done(function (data) {
+                $("#content").empty();
+                var table = $("<table>");
+                table.append("<tr>" +
+                    "<td>id</td>" +
+                    "<td>name</td>" +
+                    "<td>score</td>" +
+                    "<td>reviews</td>" +
+                    "<td>Edit</td>" +
+                    "<td>Delete</td>" +
+                    "</tr>");
+                var movies = JSON.parse(data);
+                movies.forEach(function (movie) {
+                    var row = $("<tr>");
+                    var idLink = $('<a href="#">').append(movie.id).on("click", function () {
+                        view(movie.id);
+                    });
+                    row.append($("<td>").append(idLink));
+                    var movieLink = $('<a href="#">').append(movie.name).on("click", function () {
+                        view(movie.id);
+                    });
+                    row.append($("<td>").append(movieLink));
+                    row.append("<td>" + movie.score + "</td>" +
+                        "<td>" + movie.reviews + "</td>");
+                    var editBtn = $('<input value="EDIT">').button().on("click", function () {
+                        edit(movie);
+                    });
+                    var removeBtn = $('<input value="DELETE">').button().on("click", function () {
+                        remove(movie)
+                    });;
+                    row.append($("<td>").append(editBtn));
+                    row.append($("<td>").append(removeBtn));
+                    table.append(row);
+                });
+                var addBtn = $('<input value="ADD NEW">').button().on("click", function () {
+                    showAddDialog();
+                });
+                $("#content").append(addBtn);
+                $("#content").append(table);
+            }).fail(ajaxErr);
+        }
+        function showAddDialog() {
+            $('#addMovieName').val('');
+            $('#addMovieYear').val('');
+            $('#addMovieStudio').val('');
+            $('#addMovieGenre').val('');
+            $('#addMovieRating').val('');
+            $('#addMovieRuntime').val('');
+            $('#addMovieDirector').val('');
+            $('#addMovieDescription').val('');
+            $('#addMovieBtn').unbind();
+            $('#addMovieBtn').button().on("click", function () {
+                $("#content").html("adding...");
+                $("#addMovieDiv").dialog("close");
+                $.ajax({
+                    type: "POST",
+                    url: server,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({
+                        name: $('#addMovieName').val(),
+                        year: $('#addMovieYear').val(),
+                        studio: $('#addMovieStudio').val(),
+                        genre: $('#addMovieGenre').val(),
+                        rating: $('#addMovieRating').val(),
+                        runtime: $('#addMovieRuntime').val(),
+                        director: $('#addMovieDirector').val(),
+                        description: $('#addMovieDescription').val()
+                    })
+                }).done(function (data) {
+                    $("#content").html("ADD COMPLETE! ID:" + data);
+                    setTimeout(loadMovies, 1500);
+                }).fail(ajaxErr);
+            });
+            $("#addMovieDiv").dialog("open");
+        }
+        function edit(movie) {
+            $('#updateMovieName').val(movie.name);
+            $('#updateMovieYear').val(movie.year);
+            $('#updateMovieStudio').val(movie.studio);
+            $('#updateMovieGenre').val(movie.genre);
+            $('#updateMovieRating').val(movie.rating);
+            $('#updateMovieRuntime').val(movie.runtime);
+            $('#updateMovieDirector').val(movie.director);
+            $('#updateMovieDescription').val(movie.description);
+            $('#updateMovieBtn').unbind();
+            $('#updateMovieBtn').button().on("click", function () {
+                $("#content").html("updating...");
+                $("#updateMovieDiv").dialog("close");
+                $.ajax({
+                    type: "PUT",
+                    url: server + "/" + movie.id,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({
+                        name: $('#updateMovieName').val(),
+                        year: $('#updateMovieYear').val(),
+                        studio: $('#updateMovieStudio').val(),
+                        genre: $('#updateMovieGenre').val(),
+                        rating: $('#updateMovieRating').val(),
+                        runtime: $('#updateMovieRuntime').val(),
+                        director: $('#updateMovieDirector').val(),
+                        description: $('#updateMovieDescription').val()
+                    })
+                }).done(function (data) {
+                    $("#content").html("UPDATE COMPLETE! :" + data);
+                    setTimeout(loadMovies, 1500);
+                }).fail(ajaxErr);
+            });
+            $("#updateMovieDiv").dialog("open");
+        }
+        function remove(movie) {
+            $("#content").html("REMOVING...");
+            $.ajax({
+                type: "DELETE",
+                url: server + "/" + movie.id
+            }).done(function (data) {
+                $("#content").html("DELETE COMPLETE!");
+                setTimeout(loadMovies, 1500);
+            });
+        }
+
+        function view(id) {
+            $("#content").html("LOADING...");
+            $.ajax({
+                type: "GET",
+                url: server + "/" + id
+            }).done(function (data) {
+                $("#content").empty();
+                var movie = JSON.parse(data);
+                $("#content").append($('<input value="Back">').button().on("click", loadMovies));
+                var dataTable = '<table  border="0" cellpadding="0"><tr><td><table  border="0" cellpadding="0">';
+                dataTable += '<tr><td>Name</td><td>' + movie.name + '</td></tr>';
+                dataTable += '<tr><td>Year</td><td>' + movie.year + '</td></tr>';
+                dataTable += '<tr><td>Studio</td><td>' + movie.studio + '</td></tr>';
+                dataTable += '<tr><td>Genre</td><td>' + movie.genre + '</td></tr>';
+                dataTable += '<tr><td>Rating</td><td>' + movie.rating + '</td></tr>';
+                dataTable += '<tr><td>Runtime</td><td>' + movie.runtime + '</td></tr>';
+                dataTable += '<tr><td>Director</td><td>' + movie.director + '</td></tr>';
+                dataTable += '</table><td>Description: <br/>' + movie.description + "</td></tr></table>";
+                $("#content").append(dataTable);
+                $("#content").append("Reviews:");
+                var table = $("<table>");
+                table.append("<tr>" +
+                    "<td>id</td>" +
+                    "<td>name</td>" +
+                    "<td>score</td>" +
+                    "<td>Edit</td>" +
+                    "<td>Delete</td>" +
+                    "</tr>");
+                movie.reviews.forEach(function (review) {
+                    var row = $("<tr>");
+                    row.append($("<td>").append(
+                        $('<a href="#">').append(review.id).on("click", function () {
+                            viewReview(movie.id, review.id);
+                        })
+                    ));
+                    row.append($("<td>").append(
+                        $('<a href="#">').append(review.name).on("click", function () {
+                            viewReview(movie.id, review.id);
+                        })
+                    ));
+                    row.append("<td>" + review.score + "</td>");
+                    var editBtn = $('<input value="EDIT">').button().on("click", function () {
+                        editReview(movie, review);
+                    });
+                    var removeBtn = $('<input value="DELETE">').button().on("click", function () {
+                        removeReview(movie, review);
+                    });;
+                    row.append($("<td>").append(editBtn));
+                    row.append($("<td>").append(removeBtn));
+                    table.append(row);
+                });
+                $("#content").append(table);
+                $("#content").append($('<input value="Add Review">').button().on("click", function () { addReview(movie) }));
+            }).fail(ajaxErr);
+        }
+
+        function addReview(movie) {
+            $('#addReviewName').val('');
+            $('#addReviewDescription').val('');
+            $('#addReviewScore').val('');
+            $('#addReviewBtn').unbind();
+            $('#addReviewBtn').button().on("click", function () {
+                $("#content").html("adding...");
+                $("#addReviewDiv").dialog("close");
+                $.ajax({
+                    type: "POST",
+                    url: server + '/' + movie.id,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({
+                        name: $('#addReviewName').val(),
+                        description: $('#addReviewDescription').val(),
+                        score: $('#addReviewScore').val(),
+                        date: new Date().toString()
+                    })
+                }).done(function (data) {
+                    $("#content").html("ADD COMPLETE! ID:" + data);
+                    setTimeout(function () { view(movie.id); }, 1500);
+                }).fail(ajaxErr);
+            });
+            $("#addReviewDiv").dialog("open");
+        }
+
+        function editReview(movie, review) {
+            $('#updateReviewName').val(review.name);
+            $('#updateReviewDescription').val(review.description);
+            $('#updateReviewScore').val(review.score);
+            $('#updateReviewBtn').unbind();
+            $('#updateReviewBtn').button().on("click", function () {
+                $("#content").html("updating...");
+                $("#updateReviewDiv").dialog("close");
+                $.ajax({
+                    type: "PUT",
+                    url: server + "/" + movie.id + "/" + review.id,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    data: JSON.stringify({
+                        name: $('#updateReviewName').val(),
+                        description: $('#updateReviewDescription').val(),
+                        score: $('#updateReviewScore').val(),
+                        date: new Date().toString()
+                    })
+                }).done(function (data) {
+                    $("#content").html("UPDATE COMPLETE! :" + data);
+                    setTimeout(function () { view(movie.id); }, 1500);
+                }).fail(ajaxErr);
+            });
+            $("#updateReviewDiv").dialog("open");
+        }
+
+        function removeReview(movie, review) {
+            $("#content").html("REMOVING...");
+            $.ajax({
+                type: "DELETE",
+                url: server + "/" + movie.id + "/" + review.id
+            }).done(function (data) {
+                $("#content").html("DELETE COMPLETE!");
+                setTimeout(function () { view(movie.id) }, 1500);
+            });
+        }
+
+        function viewReview(movieId, reviewId) {
+            $("#content").html("LOADING...");
+            $.ajax({
+                type: "GET",
+                url: server + "/" + movieId + "/" + reviewId
+            }).done(function (data) {
+                $("#content").empty();
+                var review = JSON.parse(data);
+                $("#content").append($('<input value="Back">').button().on("click", function () { view(movieId); }));
+                $("#content").append('<pre>' + JSON.stringify(review, null, 2) + "</pre>");
+            }).fail(ajaxErr);
+        }
+
+        function ajaxErr(jqXHR, textStatus, errorThrown) {
+            alert(this.url + "->" + jqXHR.status + ":" + textStatus + "::" + errorThrown);
+        }
+    </script>
+    <title>Movies HTML5 Client</title>
+</head>
+
+<body>
+    <div id="login" title="CONNECT TO">
+        <input type="text" id="inserver" value="http://localhost:8888" />
+        <input type="button" id="loginbtn" value="CONNECT" />
+    </div>
+    <div id="content">
+    </div>
+    <div id="addMovieDiv" title="Add Movie">
+        <table border="0" cellpadding="0">
+            <tr>
+                <td>Name:</td>
+                <td><input type="text" id="addMovieName" /></td>
+            </tr>
+            <tr>
+                <td>Year:</td>
+                <td><input type="text" id="addMovieYear" /></td>
+            </tr>
+            <tr>
+                <td>Studio:</td>
+                <td><input type="text" id="addMovieStudio" /></td>
+            </tr>
+            <tr>
+                <td>Genre:</td>
+                <td><input type="text" id="addMovieGenre" /></td>
+            </tr>
+            <tr>
+                <td>Rating:</td>
+                <td><input type="text" id="addMovieRating" /></td>
+            </tr>
+            <tr>
+                <td>Runtime:</td>
+                <td><input type="text" id="addMovieRuntime" /></td>
+            </tr>
+            <tr>
+                <td>Director:</td>
+                <td><input type="text" id="addMovieDirector" /></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td><input type="text" id="addMovieDescription" /></td>
+            </tr>
+            <tr>
+                <td><input type="button" id="addMovieCancel" value="Cancel" /></td>
+                <td><input type="button" id="addMovieBtn" value="Add Movie" /></td>
+            </tr>
+        </table>
+    </div>
+    <div id="updateMovieDiv" title="Update Movie">
+        <table border="0" cellpadding="0">
+            <tr>
+                <td>Name:</td>
+                <td><input type="text" id="updateMovieName" /></td>
+            </tr>
+            <tr>
+                <td>Year:</td>
+                <td><input type="text" id="updateMovieYear" /></td>
+            </tr>
+            <tr>
+                <td>Studio:</td>
+                <td><input type="text" id="updateMovieStudio" /></td>
+            </tr>
+            <tr>
+                <td>Genre:</td>
+                <td><input type="text" id="updateMovieGenre" /></td>
+            </tr>
+            <tr>
+                <td>Rating:</td>
+                <td><input type="text" id="updateMovieRating" /></td>
+            </tr>
+            <tr>
+                <td>Runtime:</td>
+                <td><input type="text" id="updateMovieRuntime" /></td>
+            </tr>
+            <tr>
+                <td>Director:</td>
+                <td><input type="text" id="updateMovieDirector" /></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td><input type="text" id="updateMovieDescription" /></td>
+            </tr>
+            <tr>
+                <td><input type="button" id="updateMovieCancel" value="Cancel" /></td>
+                <td><input type="button" id="updateMovieBtn" value="Update" /></td>
+            </tr>
+        </table>
+    </div>
+    <div id="addReviewDiv" title="Add Review">
+        <table border="0" cellpadding="0">
+            <tr>
+                <td>Name:</td>
+                <td><input type="text" id="addReviewName" /></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td><input type="text" id="addReviewDescription" /></td>
+            </tr>
+            <tr>
+                <td>Score:</td>
+                <td><input type="text" id="addReviewScore" /></td>
+            </tr>
+            <tr>
+                <td><input type="button" id="addReviewCancel" value="Cancel" /></td>
+                <td><input type="button" id="addReviewBtn" value="Add Review" /></td>
+            </tr>
+        </table>
+    </div>
+    <div id="updateReviewDiv" title="Update Review">
+        <table border="0" cellpadding="0">
+            <tr>
+                <td>Name:</td>
+                <td><input type="text" id="updateReviewName" /></td>
+            </tr>
+            <tr>
+                <td>Description:</td>
+                <td><input type="text" id="updateReviewDescription" /></td>
+            </tr>
+            <tr>
+                <td>Score:</td>
+                <td><input type="text" id="updateReviewScore" /></td>
+            </tr>
+            <tr>
+                <td><input type="button" id="updateReviewCancel" value="Cancel" /></td>
+                <td><input type="button" id="updateReviewBtn" value="Update Review" /></td>
+            </tr>
+        </table>
+    </div>
+</body>
